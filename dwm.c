@@ -270,6 +270,7 @@ static Display *dpy;
 static Drw *drw;
 static Monitor *mons, *selmon;
 static Window root, wmcheckwin;
+unsigned int gappo = 2, gappi = 2;
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
@@ -1260,7 +1261,7 @@ grid(Monitor *m)
 	unsigned int i, n;
 	unsigned int cx, cy, cw, ch;
 	unsigned int dx;
-	unsigned int cols, rows, overcols, gappo = 8, gappi = 8;
+	unsigned int cols, rows, overcols;
 	Client *c;
 
 	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
@@ -1736,32 +1737,69 @@ tagmon(const Arg *arg)
 	sendmon(selmon->sel, dirtomon(arg->i));
 }
 
-	void
+// 	void
+// tile(Monitor *m)
+// {
+// 	unsigned int i, n, h, mw, my, ty;
+// 	Client *c;
+
+// 	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
+// 	if (n == 0)
+// 		return;
+
+// 	if (n > m->nmaster)
+// 		mw = m->nmaster ? m->ww * m->mfact : 0;
+// 	else
+// 		mw = m->ww;
+// 	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
+// 		if (i < m->nmaster) {
+// 			h = (m->wh - my) / (MIN(n, m->nmaster) - i);
+// 			resize(c, m->wx, m->wy + my, mw - (2*c->bw), h - (2*c->bw), 0);
+// 			if (my + HEIGHT(c) < m->wh)
+// 				my += HEIGHT(c);
+// 		} else {
+// 			h = (m->wh - ty) / (n - i);
+// 			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
+// 			if (ty + HEIGHT(c) < m->wh)
+// 				ty += HEIGHT(c);
+// 		}
+// }
+
+    void
 tile(Monitor *m)
 {
-	unsigned int i, n, h, mw, my, ty;
-	Client *c;
+    unsigned int i, n, h, r, mw, my, ty;
+    Client *c;
 
-	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
-	if (n == 0)
-		return;
+    for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
+    if (n == 0) return;
 
-	if (n > m->nmaster)
-		mw = m->nmaster ? m->ww * m->mfact : 0;
-	else
-		mw = m->ww;
-	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
-		if (i < m->nmaster) {
-			h = (m->wh - my) / (MIN(n, m->nmaster) - i);
-			resize(c, m->wx, m->wy + my, mw - (2*c->bw), h - (2*c->bw), 0);
-			if (my + HEIGHT(c) < m->wh)
-				my += HEIGHT(c);
-		} else {
-			h = (m->wh - ty) / (n - i);
-			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
-			if (ty + HEIGHT(c) < m->wh)
-				ty += HEIGHT(c);
-		}
+    if (n > m->nmaster)
+        mw = m->nmaster ? (m->ww + gappi) * m->mfact : 0;
+    else
+        mw = m->ww - 2 * gappo + gappi;
+    for (i = 0, my = ty = gappo, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
+        if (i < m->nmaster) {
+            r = MIN(n, m->nmaster) - i;
+            h = (m->wh - my - gappo - gappi * (r - 1)) / r;
+            resize(c,
+                   m->wx + gappo,
+                   m->wy + my,
+                   mw - 2 * c->bw - gappi,
+                   h - 2 * c->bw,
+                   0);
+            my += HEIGHT(c) + gappi;
+        } else {
+            r = n - i;
+            h = (m->wh - ty - gappo - gappi * (r - 1)) / r;
+            resize(c,
+                   m->wx + mw + gappo,
+                   m->wy + ty,
+                   m->ww - mw - 2 * c->bw - 2 * gappo,
+                   h - 2* c->bw,
+                   0);
+            ty += HEIGHT(c) + gappi;
+        }
 }
 
 	void
