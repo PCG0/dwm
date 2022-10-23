@@ -270,7 +270,7 @@ static Display *dpy;
 static Drw *drw;
 static Monitor *mons, *selmon;
 static Window root, wmcheckwin;
-unsigned int gappo = 2, gappi = 2;
+unsigned int gappo = 0, gappi = 0;
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
